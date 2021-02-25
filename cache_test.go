@@ -32,9 +32,23 @@ func Test_Without_Value(t *testing.T) {
 func Test_Put(t *testing.T) {
 	t.Helper()
 
-	want := "/6a/e9/6ae999552ad2dca14d62e2bc8b764d377b1dd6c"
+	want := "6a/e9/"
 	if got, _ := Put("name", "Go Cache"); got.Path != want {
 		t.Errorf("\nWant: %v\nGot:  %v", want, got.Path)
 	}
 
+}
+
+func Test_Save(t *testing.T) {
+	t.Helper()
+
+	c, err := Put("name", "Go Cache")
+
+	if err != nil {
+		t.Errorf("\nWant: %v\nGot:  %v", nil, err.Error())
+	}
+
+	if err := c.Save(); err != nil {
+		t.Errorf("\nWant: %v\nGot:  %v", nil, err.Error())
+	}
 }
