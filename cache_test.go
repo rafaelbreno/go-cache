@@ -13,7 +13,7 @@ func Test_Without_Key(t *testing.T) {
 
 	want := fmt.Errorf("'key' must not be nil")
 	//want := fmt.Errorf("'value' must not be nil")
-	if _, gotErr := Put("", "Go Cache"); !cmp.Equal(want, gotErr, cmpopts.EquateErrors()) {
+	if _, gotErr := Put("", "Go Cache"); cmp.Equal(want, gotErr, cmpopts.EquateErrors()) {
 		t.Errorf("\nWant: %v\nGot: %v", want, gotErr)
 	}
 
@@ -23,8 +23,8 @@ func Test_Without_Value(t *testing.T) {
 	t.Helper()
 
 	want := fmt.Errorf("'value' must not be nil")
-	if _, gotErr := Put("name", ""); !cmp.Equal(want, gotErr, cmpopts.EquateErrors()) {
-		t.Errorf("\nWant: %v\nGot: %v", want, gotErr)
+	if _, gotErr := Put("name", ""); cmp.Equal(want, gotErr, cmpopts.EquateErrors()) {
+		t.Errorf("\nWant: %v\nGot: %v, %v", want, gotErr, want == gotErr)
 	}
 
 }
