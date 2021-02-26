@@ -62,7 +62,7 @@ func (c *Cache) Save() error {
 	// Dumping bytes into a file
 
 	if _, err := os.Stat(c.Path); os.IsNotExist(err) {
-		os.MkdirAll(c.Path, os.ModeDir)
+		os.MkdirAll(c.Path, 0777)
 	}
 
 	f, err := os.Create(fmt.Sprintf("%s%s", c.Path, c.FileName))
