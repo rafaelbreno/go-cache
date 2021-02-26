@@ -1,0 +1,14 @@
+# Ignore everything
+*
+
+# Except
+!.gitignore
+
+# Go Files
+!*.go
+!go.mod
+!go.sum
+
+# Project Folders/Files
+!errors/*
+!errors/
