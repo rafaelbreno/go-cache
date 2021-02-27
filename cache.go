@@ -34,10 +34,6 @@ func Put(key, value string) (Cache, error) {
 	// Set cache path and filename
 	c.SetPath()
 
-	if err, exists := c.Exists(); !exists {
-		return Cache{}, err
-	}
-
 	// Return Cache
 	return c, nil
 }
