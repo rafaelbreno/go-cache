@@ -34,6 +34,10 @@ func Put(key, value string) (Cache, error) {
 	// Set cache path and filename
 	c.SetPath()
 
+	if err, exists := c.Exists(); !exists {
+		return Cache{}, err
+	}
+
 	// Return Cache
 	return c, nil
 }
@@ -80,4 +84,20 @@ func (c *Cache) Save() error {
 	}
 
 	return nil
+}
+
+// Check if Cache already exists
+func (c *Cache) Exists() (error, bool) {
+	file, err := os.Stat(c.Path)
+
+	if os.IsNotExist(err) {
+		return fmt.Errorf("File does not exists"), false
+	}
+	isDir := !file.IsDir()
+
+	// If file does not exists, if it's a directory
+	if isDir {
+		return fmt.Errorf("It's a directory not a file"), false
+	}
+	return nil, true
 }
