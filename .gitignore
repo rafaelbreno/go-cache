@@ -10,5 +10,7 @@
 !go.sum
 
 # Project Folders/Files
-!errors/*
+!errors/*.go
 !errors/
+!tests/*.go
+!tests/
