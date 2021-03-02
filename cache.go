@@ -40,3 +40,59 @@ func (c Cache) Put(key, value string) error {
 		return fmt.Errorf("The format isn't supported")
 	}
 }
+
+func (c Cache) Get(key string) (string, error) {
+	c.key = key
+
+	switch c.storeType.(type) {
+	case stores.File:
+		FileCache := stores.File{
+			Key: key,
+		}
+		return stores.Get(&FileCache)
+	default:
+		return "", fmt.Errorf("The format isn't supported")
+	}
+}
+
+func (c Cache) Has(key string) (bool, error) {
+	c.key = key
+
+	switch c.storeType.(type) {
+	case stores.File:
+		FileCache := stores.File{
+			Key: key,
+		}
+		return stores.Has(&FileCache)
+	default:
+		return false, fmt.Errorf("The format isn't supported")
+	}
+}
+
+func (c Cache) Delete(key string) error {
+	c.key = key
+
+	switch c.storeType.(type) {
+	case stores.File:
+		FileCache := stores.File{
+			Key: key,
+		}
+		return stores.Delete(&FileCache)
+	default:
+		return fmt.Errorf("The format isn't supported")
+	}
+}
+
+func (c Cache) Pull(key string) (bool, error) {
+	c.key = key
+
+	switch c.storeType.(type) {
+	case stores.File:
+		FileCache := stores.File{
+			Key: key,
+		}
+		return stores.Has(&FileCache)
+	default:
+		return false, fmt.Errorf("The format isn't supported")
+	}
+}
