@@ -15,8 +15,6 @@ type File struct {
 	fileName string // Cache file's name
 }
 
-//Pull() (string, error)
-
 // Method to store a string value into a key
 func (f *File) Put() error {
 	// Validate key
@@ -39,7 +37,7 @@ func (f *File) Put() error {
 // Retrieve cached value
 func (f *File) Get() (string, error) {
 	if !f.Has() {
-		return "", fmt.Errorf("The file doesn't ")
+		return "", fmt.Errorf("The key doesn't exists")
 	}
 
 	dat, err := ioutil.ReadFile(f.fileName)

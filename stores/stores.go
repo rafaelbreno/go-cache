@@ -1,29 +1,34 @@
 package stores
 
-type Cache interface {
+type CacheInterface interface {
 	Put() error
 	Get() (string, error)
 	Has() bool
-	Delete() (bool, error)
+	Delete() error
 	Pull() (string, error)
 }
 
 // Put a value
-func Put(c Cache) error {
+func Put(c CacheInterface) error {
 	return c.Put()
 }
 
 // Retrieve a cached Value
-func Get(c Cache) (string, error) {
+func Get(c CacheInterface) (string, error) {
 	return c.Get()
 }
 
 // Check is key exists
-func Has(c Cache) bool {
+func Has(c CacheInterface) bool {
 	return c.Has()
 }
 
+// Check is key exists
+func Delete(c CacheInterface) error {
+	return c.Delete()
+}
+
 // Retrieve and delete value
-func Pull(c Cache) (bool, error) {
+func Pull(c CacheInterface) (string, error) {
 	return c.Pull()
 }
