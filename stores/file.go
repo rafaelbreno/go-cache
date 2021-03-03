@@ -36,6 +36,11 @@ func (f *File) Put() error {
 
 // Retrieve cached value
 func (f *File) Get() (string, error) {
+	// Validate key
+	if f.Key == "" {
+		return "", fmt.Errorf("'key' must not be nil")
+	}
+
 	if has, err := f.Has(); !has {
 		return "", err
 	}
@@ -50,6 +55,11 @@ func (f *File) Get() (string, error) {
 
 // Check if Cache already exists
 func (f *File) Has() (bool, error) {
+	// Validate key
+	if f.Key == "" {
+		return false, fmt.Errorf("'key' must not be nil")
+	}
+
 	file, err := os.Stat(f.path)
 
 	if os.IsNotExist(err) {
@@ -66,6 +76,11 @@ func (f *File) Has() (bool, error) {
 
 // Delete cached file
 func (f *File) Delete() error {
+	// Validate key
+	if f.Key == "" {
+		return fmt.Errorf("'key' must not be nil")
+	}
+
 	if err := os.Remove(f.path); err != nil {
 		return err
 	}
@@ -75,6 +90,11 @@ func (f *File) Delete() error {
 
 // Retrieve and delete cached file
 func (f *File) Pull() (string, error) {
+	// Validate key
+	if f.Key == "" {
+		return "", fmt.Errorf("'key' must not be nil")
+	}
+
 	val, err := f.Get()
 
 	if err != nil {
