@@ -3,7 +3,7 @@ package stores
 type CacheInterface interface {
 	Put() error
 	Get() (string, error)
-	Has() bool
+	Has() (bool, error)
 	Delete() error
 	Pull() (string, error)
 }
@@ -19,7 +19,7 @@ func Get(c CacheInterface) (string, error) {
 }
 
 // Check is key exists
-func Has(c CacheInterface) bool {
+func Has(c CacheInterface) (bool, error) {
 	return c.Has()
 }
 

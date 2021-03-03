@@ -36,8 +36,8 @@ func (f *File) Put() error {
 
 // Retrieve cached value
 func (f *File) Get() (string, error) {
-	if !f.Has() {
-		return "", fmt.Errorf("The key doesn't exists")
+	if has, err := f.Has(); !has {
+		return "", err
 	}
 
 	dat, err := ioutil.ReadFile(f.fileName)
@@ -49,19 +49,19 @@ func (f *File) Get() (string, error) {
 }
 
 // Check if Cache already exists
-func (f *File) Has() bool {
+func (f *File) Has() (bool, error) {
 	file, err := os.Stat(f.path)
 
 	if os.IsNotExist(err) {
-		return false
+		return false, fmt.Errorf("Cache doesn't exists")
 	}
 	isDir := !file.IsDir()
 
 	// If file does not exists, if it's a directory
 	if isDir {
-		return false
+		return false, fmt.Errorf("Cache file doesn't exists")
 	}
-	return true
+	return true, nil
 }
 
 // Delete cached file
