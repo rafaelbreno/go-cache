@@ -118,3 +118,51 @@ func Test_Store_File_Has(t *testing.T) {
 		})
 	}
 }
+
+func get_Store_File_Get_Tests() []testFile {
+	var t []testFile
+
+	f1, _ := cache.Store(stores.File{})
+
+	_, err := f1.Get("")
+
+	t = append(t, testFile{
+		name: "Key missing",
+		want: fmt.Errorf("'key' must not be nil"),
+		got:  err,
+	})
+
+	f2, _ := cache.Store(stores.File{})
+	_, err = f2.Get("random_key")
+
+	t = append(t, testFile{
+		name: "Cache not found",
+		want: fmt.Errorf("Cache doesn't exists"),
+		got:  err,
+	})
+
+	f3, _ := cache.Store(stores.File{})
+	_, err = f3.Get("foo")
+
+	t = append(t, testFile{
+		name: "Value exists",
+		want: nil,
+		got:  err,
+	})
+
+	return t
+}
+
+func Test_Store_File_Get(t *testing.T) {
+	t.Helper()
+
+	tts := get_Store_File_Get_Tests()
+
+	for _, tt := range tts {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.got != nil && cmp.Equal(tt.want, tt.got, cmpopts.EquateErrors()) {
+				t.Errorf("\nWant: %v\nGot: %v", tt.want, tt.want)
+			}
+		})
+	}
+}
