@@ -3,6 +3,7 @@ package cache
 import (
 	"fmt"
 
+	"github.com/go-redis/redis"
 	"github.com/rafaelbreno/go-cache/stores"
 )
 
@@ -10,6 +11,21 @@ type Cache struct {
 	storeType interface{} // Select which cache provider
 	key       string      // Cache identifier - Cannot be null
 	value     []byte      // Cache value itself
+}
+
+var RedisClient *redis.Client
+
+func SetConfig(conns ...interface{}) {
+	for _, conn := range conns {
+		switch conn.(type) {
+		case *redis.Client:
+			RedisClient = conn.(*redis.Client)
+			break
+		default:
+			break
+		}
+	}
+
 }
 
 // Choose a store type(file, redis, memcached, dynamodb, etc.)
