@@ -3,10 +3,7 @@ package stores
 import (
 	"crypto/sha1"
 	"fmt"
-	"io/ioutil"
-	"os"
 
-	cache "github.com/rafaelbreno/go-cache"
 	"github.com/go-redis/redis/v8"
 )
 
@@ -19,10 +16,6 @@ type Redis struct {
 }
 
 var redisClient *redis.Client
-
-func init() {
-	redisClient = cache.RedisClient
-}
 
 // Method to store a string value into a key
 func (f *Redis) Put() error {
