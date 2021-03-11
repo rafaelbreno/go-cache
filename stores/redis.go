@@ -1,9 +1,9 @@
 package stores
 
 import (
+	"context"
 	"crypto/sha1"
 	"fmt"
-
 	"github.com/go-redis/redis/v8"
 )
 
@@ -13,9 +13,12 @@ type Redis struct {
 	Value    []byte // Cache value itself
 	path     string // Cache file path with the stored value
 	fileName string // Cache file's name
+	strCMD   *redis.StringCmd
 }
 
 var redisClient *redis.Client
+
+var ctx = context.TODO()
 
 // Method to store a string value into a key
 func (f *Redis) Put() error {
@@ -43,32 +46,33 @@ func (r *Redis) Get() (string, error) {
 		return "", fmt.Errorf("'key' must not be nil")
 	}
 
-	var strCmd redis.StringCmd
 	var has bool
 	var err error
 
-	if has, err, strCmd = r.Has(); !has {
+	if has, err = r.Has(); !has {
 		return "", err
 	}
 
-	return strCmd.String(), nil
+	return r.strCMD.String(), nil
 }
 
 // Check if Cache already exists
-func (r *Redis) Has() (bool, error, redis.StringCmd) {
+func (r *Redis) Has() (bool, error) {
 	// Validate key
 	if r.Key == "" {
-		return false, fmt.Errorf("'key' must not be nil"), redis.StringCmd{}
+		return false, fmt.Errorf("'key' must not be nil")
 	}
 
 	// Redis `GET key` command. It returns redis.Nil error when key does not exist.
-	strCmd := redisClient.Get(r.Key)
+	strCmd := redisClient.Get(ctx, r.Key)
 
-	if err := strCmd.Err(); err != nil {
-		return false, err, redis.StringCmd{}
+	if err := strCmd.Err(); err != redis.Nil {
+		return false, err
 	}
 
-	return true, nil, *strCmd
+	r.strCMD = strCmd
+
+	return true, nil
 }
 
 // Delete cached file
@@ -78,7 +82,7 @@ func (r *Redis) Delete() error {
 		return fmt.Errorf("'key' must not be nil")
 	}
 
-	err := redisClient.Del(r.Key).Err()
+	err := redisClient.Del(ctx, r.Key).Err()
 
 	return err
 }
@@ -125,7 +129,7 @@ func (f *Redis) SetPath() {
 func (r *Redis) Save() error {
 	// Dumping bytes into a file
 
-	err := redisClient.Set(r.Key, r.fileName, 0).Err()
+	err := redisClient.Set(ctx, r.Key, r.fileName, 0).Err()
 
 	return err
 }
