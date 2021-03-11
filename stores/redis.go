@@ -6,8 +6,8 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/go-redis/redis"
 	cache "github.com/rafaelbreno/go-cache"
+	"github.com/go-redis/redis/v8"
 )
 
 // TODO: implement expiration
