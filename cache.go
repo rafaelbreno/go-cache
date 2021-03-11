@@ -36,6 +36,9 @@ func Store(t interface{}) (Cache, error) {
 	case stores.File:
 		c.storeType = stores.File{}
 		return c, nil
+	case stores.Redis:
+		c.storeType = stores.Redis{}
+		return c, nil
 	default:
 		return Cache{}, fmt.Errorf("The format isn't supported")
 	}
@@ -47,11 +50,17 @@ func (c Cache) Put(key, value string) error {
 
 	switch c.storeType.(type) {
 	case stores.File:
-		FileCache := stores.File{
+		filecache := stores.File{
 			Key:   key,
 			Value: []byte(value),
 		}
-		return stores.Put(&FileCache)
+		return stores.Put(&filecache)
+	case stores.Redis:
+		filecache := stores.Redis{
+			Key:   key,
+			Value: []byte(value),
+		}
+		return stores.Put(&filecache)
 	default:
 		return fmt.Errorf("The format isn't supported")
 	}
