@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha1"
 	"fmt"
+
 	"github.com/go-redis/redis/v8"
 )
 
@@ -19,6 +20,10 @@ type Redis struct {
 var redisClient *redis.Client
 
 var ctx = context.TODO()
+
+func SetRedisConn(r *redis.Client) {
+	redisClient = r
+}
 
 // Method to store a string value into a key
 func (f *Redis) Put() error {
