@@ -75,6 +75,11 @@ func (c Cache) Get(key string) (string, error) {
 			Key: key,
 		}
 		return stores.Get(&FileCache)
+	case stores.Redis:
+		RedisCache := stores.Redis{
+			Key: key,
+		}
+		return stores.Get(&RedisCache)
 	default:
 		return "", fmt.Errorf("The format isn't supported")
 	}
@@ -89,6 +94,11 @@ func (c Cache) Has(key string) (bool, error) {
 			Key: key,
 		}
 		return stores.Has(&FileCache)
+	case stores.Redis:
+		RedisCache := stores.Redis{
+			Key: key,
+		}
+		return stores.Has(&RedisCache)
 	default:
 		return false, fmt.Errorf("The format isn't supported")
 	}
@@ -103,12 +113,17 @@ func (c Cache) Delete(key string) error {
 			Key: key,
 		}
 		return stores.Delete(&FileCache)
+	case stores.Redis:
+		RedisCache := stores.Redis{
+			Key: key,
+		}
+		return stores.Delete(&RedisCache)
 	default:
 		return fmt.Errorf("The format isn't supported")
 	}
 }
 
-func (c Cache) Pull(key string) (bool, error) {
+func (c Cache) Pull(key string) (string, error) {
 	c.key = key
 
 	switch c.storeType.(type) {
@@ -116,8 +131,13 @@ func (c Cache) Pull(key string) (bool, error) {
 		FileCache := stores.File{
 			Key: key,
 		}
-		return stores.Has(&FileCache)
+		return stores.Pull(&FileCache)
+	case stores.Redis:
+		RedisCache := stores.Redis{
+			Key: key,
+		}
+		return stores.Pull(&RedisCache)
 	default:
-		return false, fmt.Errorf("The format isn't supported")
+		return "", fmt.Errorf("The format isn't supported")
 	}
 }
