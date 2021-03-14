@@ -33,7 +33,7 @@ func (f *Redis) Put() error {
 	}
 
 	// Validate value
-	if f.Value == nil {
+	if len(f.Value) == 0 {
 		return fmt.Errorf("'value' must not be nil")
 	}
 
