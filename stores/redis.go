@@ -2,7 +2,6 @@ package stores
 
 import (
 	"context"
-	"crypto/sha1"
 	"fmt"
 
 	"github.com/go-redis/redis/v8"
@@ -37,11 +36,7 @@ func (f *Redis) Put() error {
 		return fmt.Errorf("'value' must not be nil")
 	}
 
-	// Set cache path and filename
-	f.SetPath()
-
-	// Save value into
-	return f.Save()
+	return nil
 }
 
 // Retrieve cached value
@@ -114,27 +109,11 @@ func (r *Redis) Pull() (string, error) {
 	return val, nil
 }
 
-// Generate cache's path and filename
-// Key is encrypted using SHA1
-// First 2 characters are the parent folder name
-// Third and Forth characters are the childrens folder name
-// The entire hash is the filename
-func (f *Redis) SetPath() {
-	// Encrypt key and convert into byte array
-	keyBytes := sha1.Sum([]byte(f.Key))
-
-	// Loop to iterate the hash bytes
-	// Generate filename's
-	for i := 0; i < len(keyBytes); i++ {
-		f.fileName += fmt.Sprintf("%x", keyBytes[i])
-	}
-}
-
 // Save cache's value into a file
 func (r *Redis) Save() error {
 	// Dumping bytes into a file
 
-	err := redisClient.Set(ctx, r.Key, r.fileName, 0).Err()
+	err := redisClient.Set(ctx, r.Key, r.Value, 0).Err()
 
 	return err
 }
