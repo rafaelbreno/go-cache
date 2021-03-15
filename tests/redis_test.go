@@ -80,6 +80,10 @@ func Test_Redis_Put(t *testing.T) {
 				if tt.want.Error() != tt.got.Error() {
 					t.Errorf("\nWant: %v\n Got: %v\n", tt.want, tt.got)
 				}
+			} else {
+				if tt.want != tt.got {
+					t.Errorf("Wanted nil, received: %v", tt.got)
+				}
 			}
 		})
 	}
@@ -130,6 +134,10 @@ func Test_Redis_Get(t *testing.T) {
 				if tt.want.Error() != tt.got.Error() {
 					t.Errorf("\nWant: %v\n Got: %v\n", tt.want, tt.got)
 				}
+			} else {
+				if tt.want != tt.got {
+					t.Errorf("Wanted nil, received: %v", tt.got)
+				}
 			}
 		})
 	}
@@ -171,6 +179,10 @@ func Test_Redis_Has(t *testing.T) {
 			if tt.want != nil {
 				if tt.want.Error() != tt.got.Error() {
 					t.Errorf("\nWant: %v\n Got: %v\n", tt.want, tt.got)
+				}
+			} else {
+				if tt.want != tt.got {
+					t.Errorf("Wanted nil, received: %v", tt.got)
 				}
 			}
 		})
@@ -214,6 +226,10 @@ func Test_Redis_Pull(t *testing.T) {
 				if tt.want.Error() != tt.got.Error() {
 					t.Errorf("\nWant: %v\n Got: %v\n", tt.want, tt.got)
 				}
+			} else {
+				if tt.want != tt.got {
+					t.Errorf("Wanted nil, received: %v", tt.got)
+				}
 			}
 		})
 	}
@@ -241,7 +257,7 @@ func getStoreRedisDeleteTests() []testRedis {
 	err = redisCache.Delete("bar")
 	t = append(t, testRedis{
 		name: "Value not found",
-		want: fmt.Errorf(""),
+		want: nil,
 		got:  err,
 	})
 	return t
@@ -255,6 +271,10 @@ func Test_Redis_Delete(t *testing.T) {
 			if tt.want != nil {
 				if tt.want.Error() != tt.got.Error() {
 					t.Errorf("\nWant: %v\n Got: %v\n", tt.want, tt.got)
+				}
+			} else {
+				if tt.want != tt.got {
+					t.Errorf("Wanted nil, received: %v", tt.got)
 				}
 			}
 		})
