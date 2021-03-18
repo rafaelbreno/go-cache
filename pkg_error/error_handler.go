@@ -29,16 +29,21 @@ func NewNilError() PkgError {
 }
 
 // Returns new instance of PkgError
-func NewError(err error, msg string, args ...interface{}) PkgError {
-	msgFmt := fmt.Sprintf(msg, args...)
-
+func NewError(err error) PkgError {
 	pkgErr := PkgError{
-		Error:   err,
-		Message: msgFmt,
-		Nil:     false,
+		Error: err,
+		Nil:   false,
 	}.setTracer()
 
 	return pkgErr
+}
+
+func (p PkgError) SetMessage(msgError string, args ...interface{}) PkgError {
+	msgFmt := fmt.Sprintf(msgError, args...)
+
+	p.Message = msgFmt
+
+	return p
 }
 
 // Set tracer data
