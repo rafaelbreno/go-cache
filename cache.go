@@ -1,9 +1,9 @@
 package cache
 
 import (
-	"fmt"
-
 	"github.com/go-redis/redis/v8"
+	"github.com/rafaelbreno/go-cache/helpers"
+	"github.com/rafaelbreno/go-cache/pkg_error"
 	"github.com/rafaelbreno/go-cache/stores"
 )
 
@@ -29,22 +29,24 @@ func SetConfig(conns ...interface{}) {
 }
 
 // Choose a store type(file, redis, memcached, dynamodb, etc.)
-func Store(t interface{}) (Cache, error) {
+func Store(t interface{}) (Cache, pkg_error.PkgError) {
 	c := Cache{}
 
 	switch t.(type) {
 	case stores.File:
 		c.storeType = stores.File{}
-		return c, nil
+		return c, pkg_error.NewNilError()
 	case stores.Redis:
 		c.storeType = stores.Redis{}
-		return c, nil
+		return c, pkg_error.NewNilError()
 	default:
-		return Cache{}, fmt.Errorf("The format isn't supported")
+		return Cache{}, pkg_error.
+			NewError(nil).
+			SetMessage(pkg_error.InvalidFormat, helpers.GetType(c.storeType))
 	}
 }
 
-func (c Cache) Put(key, value string) error {
+func (c Cache) Put(key, value string) pkg_error.PkgError {
 	c.key = key
 	c.value = []byte(value)
 
@@ -62,11 +64,13 @@ func (c Cache) Put(key, value string) error {
 		}
 		return stores.Put(&filecache)
 	default:
-		return fmt.Errorf("The format isn't supported")
+		return pkg_error.
+			NewError(nil).
+			SetMessage(pkg_error.InvalidFormat, helpers.GetType(c.storeType))
 	}
 }
 
-func (c Cache) Get(key string) (string, error) {
+func (c Cache) Get(key string) (string, pkg_error.PkgError) {
 	c.key = key
 
 	switch c.storeType.(type) {
@@ -81,11 +85,13 @@ func (c Cache) Get(key string) (string, error) {
 		}
 		return stores.Get(&RedisCache)
 	default:
-		return "", fmt.Errorf("The format isn't supported")
+		return "", pkg_error.
+			NewError(nil).
+			SetMessage(pkg_error.InvalidFormat, helpers.GetType(c.storeType))
 	}
 }
 
-func (c Cache) Has(key string) (bool, error) {
+func (c Cache) Has(key string) (bool, pkg_error.PkgError) {
 	c.key = key
 
 	switch c.storeType.(type) {
@@ -100,11 +106,13 @@ func (c Cache) Has(key string) (bool, error) {
 		}
 		return stores.Has(&RedisCache)
 	default:
-		return false, fmt.Errorf("The format isn't supported")
+		return false, pkg_error.
+			NewError(nil).
+			SetMessage(pkg_error.InvalidFormat, helpers.GetType(c.storeType))
 	}
 }
 
-func (c Cache) Delete(key string) error {
+func (c Cache) Delete(key string) pkg_error.PkgError {
 	c.key = key
 
 	switch c.storeType.(type) {
@@ -119,11 +127,13 @@ func (c Cache) Delete(key string) error {
 		}
 		return stores.Delete(&RedisCache)
 	default:
-		return fmt.Errorf("The format isn't supported")
+		return pkg_error.
+			NewError(nil).
+			SetMessage(pkg_error.InvalidFormat, helpers.GetType(c.storeType))
 	}
 }
 
-func (c Cache) Pull(key string) (string, error) {
+func (c Cache) Pull(key string) (string, pkg_error.PkgError) {
 	c.key = key
 
 	switch c.storeType.(type) {
@@ -138,6 +148,8 @@ func (c Cache) Pull(key string) (string, error) {
 		}
 		return stores.Pull(&RedisCache)
 	default:
-		return "", fmt.Errorf("The format isn't supported")
+		return "", pkg_error.
+			NewError(nil).
+			SetMessage(pkg_error.InvalidFormat, helpers.GetType(c.storeType))
 	}
 }
