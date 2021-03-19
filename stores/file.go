@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+
+	"github.com/rafaelbreno/go-cache/pkg_error"
 )
 
 // TODO: implement expiration
@@ -16,15 +18,19 @@ type File struct {
 }
 
 // Method to store a string value into a key
-func (f *File) Put() error {
+func (f *File) Put() pkg_error.PkgError {
 	// Validate key
 	if f.Key == "" {
-		return fmt.Errorf("'key' must not be nil")
+		return pkg_error.
+			NewError(nil).
+			SetMessage(pkg_error.FieldMustNotBeNull, "key")
 	}
 
 	// Validate value
 	if f.Value == nil {
-		return fmt.Errorf("'value' must not be nil")
+		return pkg_error.
+			NewError(nil).
+			SetMessage(pkg_error.FieldMustNotBeNull, "value")
 	}
 
 	// Set cache path and filename
@@ -35,79 +41,94 @@ func (f *File) Put() error {
 }
 
 // Retrieve cached value
-func (f *File) Get() (string, error) {
+func (f *File) Get() (string, pkg_error.PkgError) {
 	// Validate key
 	if f.Key == "" {
-		return "", fmt.Errorf("'key' must not be nil")
+		return "", pkg_error.
+			NewError(nil).
+			SetMessage(pkg_error.FieldMustNotBeNull, "key")
 	}
 
 	if has, err := f.Has(); !has {
-		return "", err
+		return "", pkg_error.
+			NewError(err)
 	}
 
 	dat, err := ioutil.ReadFile(f.fileName)
 	if err != nil {
-		return "", err
+		return "", pkg_error.
+			NewError(err)
 	}
 
-	return string(dat), nil
+	return string(dat), pkg_error.NewNilError()
 }
 
 // Check if Cache already exists
-func (f *File) Has() (bool, error) {
+func (f *File) Has() (bool, pkg_error.PkgError) {
 	// Validate key
 	if f.Key == "" {
-		return false, fmt.Errorf("'key' must not be nil")
+		return false, pkg_error.
+			NewError(nil).
+			SetMessage(pkg_error.FieldMustNotBeNull, "key")
 	}
 
 	file, err := os.Stat(f.path)
 
 	if os.IsNotExist(err) {
-		return false, fmt.Errorf("Cache doesn't exists")
+		return false, pkg_error.
+			NewError(err).
+			SetMessage(pkg_error.CacheDontExists, f.Key)
 	}
 	isDir := !file.IsDir()
 
 	// If file does not exists, if it's a directory
 	if isDir {
-		return false, fmt.Errorf("Cache file doesn't exists")
+		return false, pkg_error.
+			NewError(err).
+			SetMessage(pkg_error.CacheDontExists, f.Key)
 	}
-	return true, nil
+	return true, pkg_error.NewNilError()
 }
 
 // Delete cached file
-func (f *File) Delete() error {
+func (f *File) Delete() pkg_error.PkgError {
 	// Validate key
 	if f.Key == "" {
-		return fmt.Errorf("'key' must not be nil")
+		return pkg_error.
+			NewError(nil).
+			SetMessage(pkg_error.FieldMustNotBeNull, "key")
 	}
 
 	if err := os.Remove(f.path); err != nil {
-		return err
+		return pkg_error.
+			NewError(err)
 	}
 
-	return nil
+	return pkg_error.NewNilError()
 }
 
 // Retrieve and delete cached file
-func (f *File) Pull() (string, error) {
+func (f *File) Pull() (string, pkg_error.PkgError) {
 	// Validate key
 	if f.Key == "" {
-		return "", fmt.Errorf("'key' must not be nil")
+		return "", pkg_error.
+			NewError(nil).
+			SetMessage(pkg_error.FieldMustNotBeNull, "key")
 	}
 
-	val, err := f.Get()
+	val, errPkg := f.Get()
 
-	if err != nil {
-		return "", err
+	if errPkg.Nil {
+		return "", errPkg
 	}
 
-	err = f.Delete()
+	errPkg = f.Delete()
 
-	if err != nil {
-		return "", err
+	if errPkg.Nil {
+		return "", errPkg
 	}
 
-	return val, nil
+	return val, pkg_error.NewNilError()
 }
 
 // Generate cache's path and filename
@@ -130,7 +151,7 @@ func (f *File) SetPath() {
 }
 
 // Save cache's value into a file
-func (f *File) Save() error {
+func (f *File) Save() pkg_error.PkgError {
 	// Dumping bytes into a file
 
 	if _, err := os.Stat(f.path); os.IsNotExist(err) {
@@ -140,7 +161,8 @@ func (f *File) Save() error {
 	cacheFile, err := os.Create(fmt.Sprintf("%s%s", f.path, f.fileName))
 
 	if err != nil {
-		return err
+		return pkg_error.
+			NewError(err)
 	}
 
 	defer cacheFile.Close()
@@ -148,8 +170,9 @@ func (f *File) Save() error {
 	_, err = cacheFile.Write(f.Value)
 
 	if err != nil {
-		return err
+		return pkg_error.
+			NewError(err)
 	}
 
-	return nil
+	return pkg_error.NewNilError()
 }
