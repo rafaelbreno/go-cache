@@ -50,8 +50,7 @@ func (f *File) Get() (string, pkg_error.PkgError) {
 	}
 
 	if has, err := f.Has(); !has {
-		return "", pkg_error.
-			NewError(err)
+		return "", err
 	}
 
 	dat, err := ioutil.ReadFile(f.fileName)
