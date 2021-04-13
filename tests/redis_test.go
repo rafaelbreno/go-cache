@@ -2,12 +2,14 @@ package cache
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/alicebob/miniredis/v2"
-	"github.com/go-redis/redis/v8"
+	redis "github.com/go-redis/redis/v8"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	cache "github.com/rafaelbreno/go-cache"
+	"github.com/rafaelbreno/go-cache/pkg_error"
 	"github.com/rafaelbreno/go-cache/stores"
 )
 
@@ -15,17 +17,17 @@ var ctx = context.TODO()
 
 type testRedis struct {
 	name string
-	want error
-	got  error
+	want pkg_error.PkgError
+	got  pkg_error.PkgError
 }
 
 // return a *redismock.ClientMock
-func init() {
+func setRedisMocker() error {
 	mr, err := miniredis.Run()
 	if err != nil {
 		// Can't run tests without this
 		// So just panic
-		panic(err)
+		return err
 	}
 
 	redisClient := redis.NewClient(&redis.Options{
@@ -33,6 +35,20 @@ func init() {
 	})
 
 	stores.SetRedisConn(redisClient)
+
+	return nil
+}
+
+// Prepare mocker
+func Test_Mock_Redis(t *testing.T) {
+	err := setRedisMocker()
+
+	if err != nil {
+		t.Errorf("\nWant: %v\nGot: %v", nil, err)
+		// Closing
+		// Without Redis mocker can't continue test
+		panic(err)
+	}
 }
 
 func getStoreRedisPutTests() []testRedis {
@@ -41,8 +57,10 @@ func getStoreRedisPutTests() []testRedis {
 	_, err := cache.Store(2)
 	t = append(t, testRedis{
 		name: "Incorrect Type",
-		want: fmt.Errorf("The format isn't supported"),
-		got:  err,
+		want: pkg_error.
+			NewNilError().
+			SetMessage(pkg_error.InvalidFormat, "int"),
+		got: err,
 	})
 
 	redisCache, _ := cache.Store(stores.Redis{})
@@ -50,22 +68,26 @@ func getStoreRedisPutTests() []testRedis {
 
 	t = append(t, testRedis{
 		name: "Key missing",
-		want: fmt.Errorf("'key' must not be nil"),
-		got:  err,
+		want: pkg_error.
+			NewNilError().
+			SetMessage(pkg_error.FieldMustNotBeNull, "key"),
+		got: err,
 	})
 
 	err = redisCache.Put("foo", "")
 
 	t = append(t, testRedis{
 		name: "Value missing",
-		want: fmt.Errorf("'value' must not be nil"),
-		got:  err,
+		want: pkg_error.
+			NewNilError().
+			SetMessage(pkg_error.FieldMustNotBeNull, "value"),
+		got: err,
 	})
 
 	err = redisCache.Put("foo", "bar")
 	t = append(t, testRedis{
 		name: "Cache successfully put",
-		want: nil,
+		want: pkg_error.NewNilError(),
 		got:  err,
 	})
 	return t
@@ -76,14 +98,8 @@ func Test_Redis_Put(t *testing.T) {
 
 	for _, tt := range tts {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.want != nil {
-				if tt.want.Error() != tt.got.Error() {
-					t.Errorf("\nWant: %v\n Got: %v\n", tt.want, tt.got)
-				}
-			} else {
-				if tt.want != tt.got {
-					t.Errorf("Wanted nil, received: %v", tt.got)
-				}
+			if tt.got.IsNil() && cmp.Equal(tt.want, tt.got, cmpopts.EquateErrors()) {
+				t.Errorf("\nWant: %v\nGot: %v", tt.want, tt.want)
 			}
 		})
 	}
@@ -95,8 +111,10 @@ func getStoreRedisGetTests() []testRedis {
 	_, err := cache.Store(2)
 	t = append(t, testRedis{
 		name: "Incorrect Type",
-		want: fmt.Errorf("The format isn't supported"),
-		got:  err,
+		want: pkg_error.
+			NewNilError().
+			SetMessage(pkg_error.InvalidFormat, "int"),
+		got: err,
 	})
 
 	redisCache, _ := cache.Store(stores.Redis{})
@@ -104,22 +122,27 @@ func getStoreRedisGetTests() []testRedis {
 
 	t = append(t, testRedis{
 		name: "Key missing",
-		want: fmt.Errorf("'key' must not be nil"),
-		got:  err,
+		want: pkg_error.
+			NewNilError().
+			SetMessage(pkg_error.FieldMustNotBeNull, "key"),
+		got: err,
 	})
 
-	_, err = redisCache.Get("foo")
+	f2Key := "random_key"
+	_, err = redisCache.Get(f2Key)
 
 	t = append(t, testRedis{
 		name: "Value Found",
-		want: nil,
-		got:  err,
+		want: pkg_error.
+			NewNilError().
+			SetMessage(pkg_error.CacheDontExists, f2Key),
+		got: err,
 	})
 
 	_, err = redisCache.Get("bar")
 	t = append(t, testRedis{
 		name: "Value not found",
-		want: nil,
+		want: pkg_error.NewNilError(),
 		got:  err,
 	})
 	return t
@@ -130,14 +153,8 @@ func Test_Redis_Get(t *testing.T) {
 
 	for _, tt := range tts {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.want != nil {
-				if tt.want.Error() != tt.got.Error() {
-					t.Errorf("\nWant: %v\n Got: %v\n", tt.want, tt.got)
-				}
-			} else {
-				if tt.want != tt.got {
-					t.Errorf("Wanted nil, received: %v", tt.got)
-				}
+			if tt.got.IsNil() && cmp.Equal(tt.want, tt.got, cmpopts.EquateErrors()) {
+				t.Errorf("\nWant: %v\nGot: %v", tt.want, tt.want)
 			}
 		})
 	}
@@ -150,22 +167,24 @@ func getStoreRedisHasTests() []testRedis {
 	_, err := redisCache.Has("")
 	t = append(t, testRedis{
 		name: "Key missing",
-		want: fmt.Errorf("'key' must not be nil"),
-		got:  err,
+		want: pkg_error.
+			NewNilError().
+			SetMessage(pkg_error.FieldMustNotBeNull, "key"),
+		got: err,
 	})
 
 	_, err = redisCache.Has("foo")
 
 	t = append(t, testRedis{
 		name: "Value Found",
-		want: nil,
+		want: pkg_error.NewNilError(),
 		got:  err,
 	})
 
 	_, err = redisCache.Has("bar")
 	t = append(t, testRedis{
 		name: "Value not found",
-		want: nil,
+		want: pkg_error.NewNilError().SetMessage(pkg_error.CacheDontExists, "bar"),
 		got:  err,
 	})
 	return t
@@ -176,14 +195,8 @@ func Test_Redis_Has(t *testing.T) {
 
 	for _, tt := range tts {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.want != nil {
-				if tt.want.Error() != tt.got.Error() {
-					t.Errorf("\nWant: %v\n Got: %v\n", tt.want, tt.got)
-				}
-			} else {
-				if tt.want != tt.got {
-					t.Errorf("Wanted nil, received: %v", tt.got)
-				}
+			if tt.got.IsNil() && cmp.Equal(tt.want, tt.got, cmpopts.EquateErrors()) {
+				t.Errorf("\nWant: %v\nGot: %v", tt.want, tt.want)
 			}
 		})
 	}
@@ -196,23 +209,27 @@ func getStoreRedisPullTests() []testRedis {
 	_, err := redisCache.Has("")
 	t = append(t, testRedis{
 		name: "Key missing",
-		want: fmt.Errorf("'key' must not be nil"),
-		got:  err,
+		want: pkg_error.
+			NewNilError().
+			SetMessage(pkg_error.FieldMustNotBeNull, "key"),
+		got: err,
 	})
 
 	_, err = redisCache.Has("foo")
 
 	t = append(t, testRedis{
 		name: "Value Found",
-		want: nil,
+		want: pkg_error.NewNilError(),
 		got:  err,
 	})
 
 	_, err = redisCache.Has("bar")
 	t = append(t, testRedis{
 		name: "Value not found",
-		want: nil,
-		got:  err,
+		want: pkg_error.
+			NewNilError().
+			SetMessage(pkg_error.CacheDontExists, "bar"),
+		got: err,
 	})
 	return t
 }
@@ -222,14 +239,8 @@ func Test_Redis_Pull(t *testing.T) {
 
 	for _, tt := range tts {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.want != nil {
-				if tt.want.Error() != tt.got.Error() {
-					t.Errorf("\nWant: %v\n Got: %v\n", tt.want, tt.got)
-				}
-			} else {
-				if tt.want != tt.got {
-					t.Errorf("Wanted nil, received: %v", tt.got)
-				}
+			if tt.got.IsNil() && cmp.Equal(tt.want, tt.got, cmpopts.EquateErrors()) {
+				t.Errorf("\nWant: %v\nGot: %v", tt.want, tt.want)
 			}
 		})
 	}
@@ -242,23 +253,27 @@ func getStoreRedisDeleteTests() []testRedis {
 	err := redisCache.Delete("")
 	t = append(t, testRedis{
 		name: "Key missing",
-		want: fmt.Errorf("'key' must not be nil"),
-		got:  err,
+		want: pkg_error.
+			NewNilError().
+			SetMessage(pkg_error.CacheDontExists, "key"),
+		got: err,
 	})
 
 	err = redisCache.Delete("foo")
 
 	t = append(t, testRedis{
 		name: "Value Found",
-		want: nil,
+		want: pkg_error.NewNilError(),
 		got:  err,
 	})
 
 	err = redisCache.Delete("bar")
 	t = append(t, testRedis{
 		name: "Value not found",
-		want: nil,
-		got:  err,
+		want: pkg_error.
+			NewNilError().
+			SetMessage(pkg_error.CacheDontExists, "bar"),
+		got: err,
 	})
 	return t
 }
@@ -268,14 +283,8 @@ func Test_Redis_Delete(t *testing.T) {
 
 	for _, tt := range tts {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.want != nil {
-				if tt.want.Error() != tt.got.Error() {
-					t.Errorf("\nWant: %v\n Got: %v\n", tt.want, tt.got)
-				}
-			} else {
-				if tt.want != tt.got {
-					t.Errorf("Wanted nil, received: %v", tt.got)
-				}
+			if tt.got.IsNil() && cmp.Equal(tt.want, tt.got, cmpopts.EquateErrors()) {
+				t.Errorf("\nWant: %v\nGot: %v", tt.want, tt.want)
 			}
 		})
 	}
