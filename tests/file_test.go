@@ -1,19 +1,19 @@
 package cache_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	cache "github.com/rafaelbreno/go-cache"
+	"github.com/rafaelbreno/go-cache/pkg_error"
 	"github.com/rafaelbreno/go-cache/stores"
 )
 
 type testFile struct {
 	name string
-	want error
-	got  error
+	want pkg_error.PkgError
+	got  pkg_error.PkgError
 }
 
 func get_Store_File_Put_Tests() []testFile {
@@ -23,8 +23,10 @@ func get_Store_File_Put_Tests() []testFile {
 
 	t = append(t, testFile{
 		name: "Incorrect Type",
-		want: fmt.Errorf("The format isn't supported"),
-		got:  err,
+		want: pkg_error.
+			NewNilError().
+			SetMessage(pkg_error.InvalidFormat, "int"),
+		got: err,
 	})
 
 	f2, _ := cache.Store(stores.File{})
@@ -32,8 +34,10 @@ func get_Store_File_Put_Tests() []testFile {
 
 	t = append(t, testFile{
 		name: "Key missing",
-		want: fmt.Errorf("'key' must not be nil"),
-		got:  err,
+		want: pkg_error.
+			NewNilError().
+			SetMessage(pkg_error.FieldMustNotBeNull, "key"),
+		got: err,
 	})
 
 	f3, _ := cache.Store(stores.File{})
@@ -41,8 +45,10 @@ func get_Store_File_Put_Tests() []testFile {
 
 	t = append(t, testFile{
 		name: "Value missing",
-		want: fmt.Errorf("'value' must not be nil"),
-		got:  err,
+		want: pkg_error.
+			NewNilError().
+			SetMessage(pkg_error.FieldMustNotBeNull, "value"),
+		got: err,
 	})
 
 	f4, _ := cache.Store(stores.File{})
@@ -50,7 +56,7 @@ func get_Store_File_Put_Tests() []testFile {
 
 	t = append(t, testFile{
 		name: "Cache successfully put",
-		want: nil,
+		want: pkg_error.NewNilError(),
 		got:  err,
 	})
 
@@ -64,7 +70,7 @@ func Test_Store_File_Put(t *testing.T) {
 
 	for _, tt := range tts {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.got != nil && cmp.Equal(tt.want, tt.got, cmpopts.EquateErrors()) {
+			if tt.got.IsNil() && cmp.Equal(tt.want, tt.got, cmpopts.EquateErrors()) {
 				t.Errorf("\nWant: %v\nGot: %v", tt.want, tt.want)
 			}
 		})
@@ -80,17 +86,22 @@ func get_Store_File_Has_Tests() []testFile {
 
 	t = append(t, testFile{
 		name: "Key missing",
-		want: fmt.Errorf("'key' must not be nil"),
-		got:  err,
+		want: pkg_error.
+			NewNilError().
+			SetMessage(pkg_error.FieldMustNotBeNull, "key"),
+		got: err,
 	})
 
 	f2, _ := cache.Store(stores.File{})
-	_, err = f2.Has("random_key")
+	f2Key := "random_key"
+	_, err = f2.Has(f2Key)
 
 	t = append(t, testFile{
 		name: "Cache not found",
-		want: fmt.Errorf("Cache doesn't exists"),
-		got:  err,
+		want: pkg_error.
+			NewNilError().
+			SetMessage(pkg_error.CacheDontExists, f2Key),
+		got: err,
 	})
 
 	f3, _ := cache.Store(stores.File{})
@@ -98,7 +109,7 @@ func get_Store_File_Has_Tests() []testFile {
 
 	t = append(t, testFile{
 		name: "Value exists",
-		want: nil,
+		want: pkg_error.NewNilError(),
 		got:  err,
 	})
 
@@ -112,7 +123,7 @@ func Test_Store_File_Has(t *testing.T) {
 
 	for _, tt := range tts {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.got != nil && cmp.Equal(tt.want, tt.got, cmpopts.EquateErrors()) {
+			if tt.got.IsNil() && cmp.Equal(tt.want, tt.got, cmpopts.EquateErrors()) {
 				t.Errorf("\nWant: %v\nGot: %v", tt.want, tt.want)
 			}
 		})
@@ -128,17 +139,22 @@ func get_Store_File_Get_Tests() []testFile {
 
 	t = append(t, testFile{
 		name: "Key missing",
-		want: fmt.Errorf("'key' must not be nil"),
-		got:  err,
+		want: pkg_error.
+			NewNilError().
+			SetMessage(pkg_error.FieldMustNotBeNull, "key"),
+		got: err,
 	})
 
 	f2, _ := cache.Store(stores.File{})
-	_, err = f2.Get("random_key")
+	f2Key := "random_key"
+	_, err = f2.Get(f2Key)
 
 	t = append(t, testFile{
 		name: "Cache not found",
-		want: fmt.Errorf("Cache doesn't exists"),
-		got:  err,
+		want: pkg_error.
+			NewNilError().
+			SetMessage(pkg_error.CacheDontExists, f2Key),
+		got: err,
 	})
 
 	f3, _ := cache.Store(stores.File{})
@@ -146,7 +162,7 @@ func get_Store_File_Get_Tests() []testFile {
 
 	t = append(t, testFile{
 		name: "Value exists",
-		want: nil,
+		want: pkg_error.NewNilError(),
 		got:  err,
 	})
 
@@ -160,7 +176,7 @@ func Test_Store_File_Get(t *testing.T) {
 
 	for _, tt := range tts {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.got != nil && cmp.Equal(tt.want, tt.got, cmpopts.EquateErrors()) {
+			if tt.got.IsNil() && cmp.Equal(tt.want, tt.got, cmpopts.EquateErrors()) {
 				t.Errorf("\nWant: %v\nGot: %v", tt.want, tt.want)
 			}
 		})
@@ -176,17 +192,22 @@ func get_Store_File_Pull_Tests() []testFile {
 
 	t = append(t, testFile{
 		name: "Key missing",
-		want: fmt.Errorf("'key' must not be nil"),
-		got:  err,
+		want: pkg_error.
+			NewNilError().
+			SetMessage(pkg_error.FieldMustNotBeNull, "key"),
+		got: err,
 	})
 
 	f2, _ := cache.Store(stores.File{})
-	_, err = f2.Pull("random_key")
+	f2Key := "random_key"
+	_, err = f2.Pull(f2Key)
 
 	t = append(t, testFile{
 		name: "Cache not found",
-		want: fmt.Errorf("Cache doesn't exists"),
-		got:  err,
+		want: pkg_error.
+			NewNilError().
+			SetMessage(pkg_error.CacheDontExists, f2Key),
+		got: err,
 	})
 
 	f3, _ := cache.Store(stores.File{})
@@ -194,7 +215,7 @@ func get_Store_File_Pull_Tests() []testFile {
 
 	t = append(t, testFile{
 		name: "Value retrieve and cache deleted",
-		want: nil,
+		want: pkg_error.NewNilError(),
 		got:  err,
 	})
 	return t
@@ -207,7 +228,7 @@ func Test_Store_File_Pull(t *testing.T) {
 
 	for _, tt := range tts {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.got != nil && cmp.Equal(tt.want, tt.got, cmpopts.EquateErrors()) {
+			if tt.got.IsNil() && cmp.Equal(tt.want, tt.got, cmpopts.EquateErrors()) {
 				t.Errorf("\nWant: %v\nGot: %v", tt.want, tt.want)
 			}
 		})
@@ -227,17 +248,22 @@ func get_Store_File_Delete_Tests() []testFile {
 
 	t = append(t, testFile{
 		name: "Key missing",
-		want: fmt.Errorf("'key' must not be nil"),
-		got:  err,
+		want: pkg_error.
+			NewNilError().
+			SetMessage(pkg_error.FieldMustNotBeNull, "key"),
+		got: err,
 	})
 
 	f2, _ := cache.Store(stores.File{})
-	err = f2.Delete("random_key")
+	f2Key := "random_key"
+	err = f2.Delete(f2Key)
 
 	t = append(t, testFile{
 		name: "Cache not found",
-		want: fmt.Errorf("Cache doesn't exists"),
-		got:  err,
+		want: pkg_error.
+			NewNilError().
+			SetMessage(pkg_error.CacheDontExists, f2Key),
+		got: err,
 	})
 
 	f3, _ := cache.Store(stores.File{})
@@ -245,7 +271,7 @@ func get_Store_File_Delete_Tests() []testFile {
 
 	t = append(t, testFile{
 		name: "Value retrieve and cache deleted",
-		want: nil,
+		want: pkg_error.NewNilError(),
 		got:  err,
 	})
 	return t
@@ -258,7 +284,7 @@ func Test_Store_File_Delete(t *testing.T) {
 
 	for _, tt := range tts {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.got != nil && cmp.Equal(tt.want, tt.got, cmpopts.EquateErrors()) {
+			if tt.got.IsNil() && cmp.Equal(tt.want, tt.got, cmpopts.EquateErrors()) {
 				t.Errorf("\nWant: %v\nGot: %v", tt.want, tt.want)
 			}
 		})
